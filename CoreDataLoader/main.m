@@ -6,6 +6,9 @@
 //  Copyright (c) 2013 Jason Koceja. All rights reserved.
 //
 
+#import "FailedBankInfo.h"
+#import "FailedBankDetails.h"
+
 static NSManagedObjectModel *managedObjectModel()
 {
     static NSManagedObjectModel *model = nil;
@@ -13,8 +16,7 @@ static NSManagedObjectModel *managedObjectModel()
         return model;
     }
     
-    NSString *path = @"CoreDataLoader";
-    path = [path stringByDeletingPathExtension];
+    NSString *path = @"CoreDateTutorial";
     NSURL *modelURL = [NSURL fileURLWithPath:[path stringByAppendingPathExtension:@"momd"]];
     model = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
     
@@ -64,7 +66,25 @@ int main(int argc, const char * argv[])
             NSLog(@"Error while saving %@", ([error localizedDescription] != nil) ? [error localizedDescription] : @"Unknown Error");
             exit(1);
         }
+        
+        NSError* err = nil;
+        NSString* dataPath = [[NSBundle mainBundle] pathForResource:@"Banks" ofType:@"json"];
+        NSArray* Banks = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:dataPath] options:kNilOptions error:&err];
+        NSLog(@"Imported Banks: %@", Banks);
     }
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
