@@ -67,10 +67,40 @@ int main(int argc, const char * argv[])
             exit(1);
         }
         
+        // read in json file for data import
         NSError* err = nil;
         NSString* dataPath = [[NSBundle mainBundle] pathForResource:@"Banks" ofType:@"json"];
         NSArray* Banks = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:dataPath] options:kNilOptions error:&err];
         NSLog(@"Imported Banks: %@", Banks);
+        //
+        [Banks enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            FailedBankInfo *failedBankInfo = [NSEntityDescription insertNewObjectForEntityForName:@"FailedBankInfo" inManagedObjectContext:context];
+            failedBankInfo.name = [obj objectForKey:@"name"];
+            failedBankInfo.city = [obj objectForKey:@"city"];
+            failedBankInfo.state = [obj objectForKey:@"state"];
+            FailedBankDetails *failedBankDetails = [NSEntityDescription insertNewObjectForEntityForName:@"FailedBankDetails" inManagedObjectContext:context];
+            failedBankDetails.closeDate = [NSDate dateWithString:[obj objectForKey:@"closeDate"]];
+            failedBankDetails.updateDate = [NSDate date];
+            failedBankDetails.zip = [obj objectForKey:@"zip"];
+            failedBankDetails.info = failedBankInfo;
+            failedBankInfo.details = failedBankDetails;
+            NSError *error;
+            if(![context save:&error]){
+                NSLog(@"Oops, couldn't save: %@", [error localizedDescription]);
+            }
+        }];
+        
+        // Test listing all failedBanksInfo from store
+        NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+        NSEntityDescription *entity = [NSEntityDescription entityForName:@"FailedBankInfo" inManagedObjectContext:context];
+        
+        [fetchRequest setEntity:entity];
+        NSArray *fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
+        for (FailedBankInfo *info in fetchedObjects){
+            NSLog(@"Name: %@", info.name);
+            FailedBankDetails *details = info.details;
+            NSLog(@"Zip: %@", details.zip);
+        }
     }
     return 0;
 }
